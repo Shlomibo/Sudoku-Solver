@@ -1,0 +1,69 @@
+﻿<UserControl
+    x:Class="Sudoku_Solver.UI.Board"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Sudoku_Solver.UI"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:conv="using:Sudoku_Solver.UI.Converters"
+    mc:Ignorable="d"
+    d:DesignHeight="500"
+    d:DesignWidth="500"
+	>
+
+	<UserControl.Resources>
+		<ItemsPanelTemplate x:Key="hori-itemcontrol-template">
+			<StackPanel Orientation="Horizontal" Margin="5" />
+		</ItemsPanelTemplate>
+
+		<ItemsPanelTemplate x:Key="vert-itemcontrol-template" >
+			<StackPanel Orientation="Vertical" Margin="5" />
+		</ItemsPanelTemplate>
+
+		<conv:CellConverter x:Key="digitConverter" />
+	</UserControl.Resources>
+
+	<Grid>
+		<ItemsControl ItemsSource="{Binding Rows}" 
+					  ItemsPanel="{StaticResource vert-itemcontrol-template}"
+					  >
+			<ItemsControl.ItemTemplate>
+				<DataTemplate>
+					<ItemsControl ItemsSource="{Binding SubMatrix}" 
+								  ItemsPanel="{StaticResource hori-itemcontrol-template}"
+								  >
+						<ItemsControl.ItemTemplate>
+							<DataTemplate>
+								<ItemsControl ItemsSource="{Binding SubMatrixRows}"
+											  ItemsPanel="{StaticResource vert-itemcontrol-template}"
+											  >
+									<ItemsControl.ItemTemplate>
+										<DataTemplate>
+											<ItemsControl ItemsSource="{Binding Cells}"
+														  ItemsPanel="{StaticResource hori-itemcontrol-template}"
+														  >
+												<ItemsControl.ItemTemplate>
+													<DataTemplate>
+														<TextBox Text="{Binding Value, 
+																		Mode=TwoWay, 
+																		Converter={StaticResource digitConverter}}" 
+																 Width="30"
+																 Height="30"
+																 BorderBrush="Black"
+																 BorderThickness="1"
+																 Margin="1"
+																 />
+													</DataTemplate>
+												</ItemsControl.ItemTemplate>
+											</ItemsControl>
+										</DataTemplate>
+									</ItemsControl.ItemTemplate>
+								</ItemsControl>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+					</ItemsControl>
+				</DataTemplate>
+			</ItemsControl.ItemTemplate>
+		</ItemsControl>
+	</Grid>
+</UserControl>
