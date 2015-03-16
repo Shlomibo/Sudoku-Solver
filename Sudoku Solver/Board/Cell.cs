@@ -3,13 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using C = Sudoku_Solver.Utils.GlobalConsts;
+using static Sudoku_Solver.Utils.GlobalConsts;
+using static System.Linq.Enumerable;
 
 namespace Sudoku_Solver.Board
 {
-	public class Cell : INotifyPropertyChanged
+	public sealed class Cell : INotifyPropertyChanged
 	{
 		#region Fields
 
@@ -18,7 +17,7 @@ namespace Sudoku_Solver.Board
 
 		#region Properties
 
-		public bool HasValue { get { return this.value.HasValue; } }
+		public bool HasValue => this.value.HasValue;
 
 		public int? Value
 		{
@@ -26,9 +25,9 @@ namespace Sudoku_Solver.Board
 			set
 			{
 				if (this.value.HasValue &&
-					((this.value < C.MIN_CELL_VALUE) || (this.value > C.MAX_CELL_VALUE)))
+					((this.value < MIN_CELL_VALUE) || (this.value > MAX_CELL_VALUE)))
 				{
-					throw new ArgumentOutOfRangeException("Value");
+					throw new ArgumentOutOfRangeException(nameof(Value));
 				}
 
 				if (this.value != value)
@@ -58,15 +57,15 @@ namespace Sudoku_Solver.Board
 			}
 		}
 
-		public GameMatrix Board { get; private set; }
-		public int X { get; private set; }
-		public int Y { get; private set; }
+		public GameMatrix Board { get; }
+		public int X { get; }
+		public int Y { get; }
 
 		public int SubMatrix
 		{
 			get
 			{
-				int i = (this.Y / C.SUB_MAT_HEIGHT) * C.SUB_MAT_HEIGHT; ;
+				int i = (this.Y / SUB_MAT_HEIGHT) * SUB_MAT_HEIGHT; ;
 
 				i += this.X / 3;
 
@@ -78,9 +77,8 @@ namespace Sudoku_Solver.Board
 		{
 			get
 			{
-				IEnumerable<int> values = Enumerable.Range(C.MIN_CELL_VALUE, 
-					C.MAX_CELL_VALUE - C.MIN_CELL_VALUE + 1);
-				values = values.Except(this.Board.Columns[this.X]);
+				IEnumerable<int> values = Range(MIN_CELL_VALUE, MAX_CELL_VALUE - MIN_CELL_VALUE + 1)
+										 .Except(this.Board.Columns[this.X]);
 
 				if (values.Any())
 				{
@@ -99,8 +97,8 @@ namespace Sudoku_Solver.Board
 
 		#region Events
 
-		public event EventHandler<PropertyChangeEventArgs<int?>> ValueChanged = (s, e) => { };
-		public event EventHandler<PropertyChangeEventArgs<bool>> HasValueChanged = (s, e) => { };
+		public event EventHandler<PropertyChangeEventArgsBase<int?>> ValueChanged = (s, e) => { };
+		public event EventHandler<PropertyChangeEventArgsBase<bool>> HasValueChanged = (s, e) => { };
 		public event EventHandler<CancelPropertyChangeEventArgs<int?>> ValueChanging = (s, e) => { };
 		public event PropertyChangedEventHandler PropertyChanged = (s, e) => { };
 		#endregion
@@ -109,6 +107,21 @@ namespace Sudoku_Solver.Board
 
 		public Cell(GameMatrix board, int x, int y, int? value)
 		{
+			if (board == null)
+			{
+				throw new NullReferenceException(nameof(board));
+			}
+
+			if ((x < 0) || (x >= BOARD_WIDTH))
+			{
+				throw new ArgumentOutOfRangeException(nameof(x));
+			}
+
+			if ((y < 0) || (y >= BOARD_HEIGHT))
+			{
+				throw new ArgumentOutOfRangeException(nameof(y));
+			}
+
 			this.Board = board;
 			this.X = x;
 			this.Y = y;

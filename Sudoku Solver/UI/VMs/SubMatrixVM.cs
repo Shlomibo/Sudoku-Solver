@@ -2,17 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using C = Sudoku_Solver.Utils.GlobalConsts;
+using static Sudoku_Solver.Utils.GlobalConsts;
 
 namespace Sudoku_Solver.UI.VMs
 {
-	class SubMatrixVM
+	internal sealed class SubMatrixVM
 	{
 		#region Fields
 
-		private BoardVM board;
-		private int rowIndex;
-		private int subMatIndex;
+		private readonly BoardVM board;
+		private readonly int rowIndex;
+		private readonly int subMatIndex;
 		private SubMatrixRowVM[] subMatrixRows; 
 		#endregion
 
@@ -36,7 +36,6 @@ namespace Sudoku_Solver.UI.VMs
 
 		public SubMatrixVM(BoardVM board, int rowIndex, int subMatIndex)
 		{
-			// TODO: Complete member initialization
 			this.board = board;
 			this.rowIndex = rowIndex;
 			this.subMatIndex = subMatIndex;
@@ -47,9 +46,9 @@ namespace Sudoku_Solver.UI.VMs
 
 		private SubMatrixRowVM[] LoadRows()
 		{
-			SubMatrixRowVM[] rows = new SubMatrixRowVM[C.SUB_MAT_HEIGHT];
+			var rows = new SubMatrixRowVM[SUB_MAT_HEIGHT];
 
-			for (int rowIndex = 0; rowIndex < C.SUB_MAT_HEIGHT; rowIndex++)
+			for (int rowIndex = 0; rowIndex < SUB_MAT_HEIGHT; rowIndex++)
 			{
 				rows[rowIndex] = new SubMatrixRowVM(
 					this.board,

@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Digit = Sudoku_Solver.Board.Cell;
-using C = Sudoku_Solver.Utils.GlobalConsts;
 using System.ComponentModel;
 
 namespace Sudoku_Solver.ViewModel
@@ -13,21 +8,21 @@ namespace Sudoku_Solver.ViewModel
 	{
 		#region Fields
 
-		private Digit _digit;
+		private Digit digit;
 		#endregion
 		#region Properties
 
 		public Digit Digit
 		{
-			get { return _digit; }
+			get { return this.digit; }
 			set
 			{
-				if (_digit != null)
+				if (this.digit != null)
 				{
 					value.ValueChanged -= Digit_ValueChanged;
 				}
 
-				_digit = value;
+				this.digit = value;
 
 				if (value != null)
 				{
@@ -53,7 +48,7 @@ namespace Sudoku_Solver.ViewModel
 				}
 				else
 				{
-					throw new ArgumentOutOfRangeException("Text");
+					throw new ArgumentOutOfRangeException(nameof(this.Text));
 				}
 			}
 		}
@@ -74,9 +69,9 @@ namespace Sudoku_Solver.ViewModel
 
 		#region Methods
 
-		private void Digit_ValueChanged(object sender, Utils.PropertyChangeEventArgs<int?> e)
+		private void Digit_ValueChanged(object sender, Utils.PropertyChangeEventArgsBase<int?> e)
 		{
-			PropertyChanged(this, new PropertyChangedEventArgs("Text"));
+			PropertyChanged(this, new PropertyChangedEventArgs(nameof(this.Text)));
 		}
 		#endregion
 

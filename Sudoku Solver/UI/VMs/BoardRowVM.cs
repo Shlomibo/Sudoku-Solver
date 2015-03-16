@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using C = Sudoku_Solver.Utils.GlobalConsts;
+using static Sudoku_Solver.Utils.GlobalConsts;
 
 namespace Sudoku_Solver.UI.VMs
 {
-	class BoardRowVM
+	internal sealed class BoardRowVM
 	{
 		#region Fields
 
-		private BoardVM board;
-		private int rowIndex;
+		private readonly BoardVM board;
+		private readonly int rowIndex;
 		private SubMatrixVM[] subMatrix;
 		#endregion
 
@@ -35,7 +35,16 @@ namespace Sudoku_Solver.UI.VMs
 
 		public BoardRowVM(BoardVM boardVM, int rowIndex)
 		{
-			// TODO: Complete member initialization
+			if (boardVM == null)
+			{
+				throw new NullReferenceException(nameof(boardVM));
+			}
+
+			if ((rowIndex < 0) || (rowIndex >= BOARD_HEIGHT))
+			{
+				throw new ArgumentOutOfRangeException(nameof(rowIndex));
+			}
+
 			this.board = boardVM;
 			this.rowIndex = rowIndex;
 		} 
@@ -45,9 +54,9 @@ namespace Sudoku_Solver.UI.VMs
 
 		private SubMatrixVM[] LoadSubMatrix()
 		{
-			SubMatrixVM[] subMarices = new SubMatrixVM[C.BOARD_WIDTH / C.SUB_MAT_WIDTH];
+			var subMarices = new SubMatrixVM[BOARD_WIDTH / SUB_MAT_WIDTH];
 
-			for (int subMatIndex = 0; subMatIndex < C.BOARD_WIDTH / C.SUB_MAT_WIDTH; subMatIndex++)
+			for (int subMatIndex = 0; subMatIndex < BOARD_WIDTH / SUB_MAT_WIDTH; subMatIndex++)
 			{
 				subMarices[subMatIndex] = new SubMatrixVM(this.board, this.rowIndex, subMatIndex);
 			}

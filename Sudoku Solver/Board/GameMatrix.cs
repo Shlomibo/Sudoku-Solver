@@ -6,17 +6,17 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using C = Sudoku_Solver.Utils.GlobalConsts;
+using static Sudoku_Solver.Utils.GlobalConsts;
 
 namespace Sudoku_Solver.Board
 {
-	public class GameMatrix : IEnumerable<Cell>
+	public sealed class GameMatrix : IEnumerable<Cell>
 	{
 		#region Fields
 
-		private Cell[,] cells = new Cell[C.BOARD_WIDTH, C.BOARD_HEIGHT];
+		private readonly Cell[,] cells = new Cell[BOARD_WIDTH, BOARD_HEIGHT];
 		private bool isSolving = false;
-		private object @lock = new object();
+		private object syncLock = new object();
 		private TaskScheduler currentScheduler = TaskScheduler.FromCurrentSynchronizationContext();
 		#endregion
 
@@ -24,12 +24,13 @@ namespace Sudoku_Solver.Board
 
 		private bool IsSolving
 		{
-			get { lock (this.@lock) { return this.isSolving; } }
-			set { lock (this.@lock) { this.isSolving = value; } }
+			get { lock (this.syncLock) { return this.isSolving; } }
+			set { lock (this.syncLock) { this.isSolving = value; } }
 		}
 
-		public int Width { get { return C.BOARD_WIDTH; } }
-		public int Height { get { return C.BOARD_HEIGHT; } }
+		public int Width => BOARD_WIDTH;
+
+		public int Height => BOARD_HEIGHT;
 
 		public int? this[int x, int y]
 		{
@@ -37,30 +38,15 @@ namespace Sudoku_Solver.Board
 			set { this.cells[x, y].Value = value; }
 		}
 
-		public Indexer<int, IEnumerable<int>> Rows
-		{
-			get
-			{
-				return new Indexer<int, IEnumerable<int>>(y => RowAt(y), () => Enumerable.Range(0, this.Height));
-			}
-		}
+		public Indexer<int, IEnumerable<int>> Rows => 
+			new Indexer<int, IEnumerable<int>>(y => RowAt(y), () => Enumerable.Range(0, this.Height));
 
-		public Indexer<int, IEnumerable<int>> Columns
-		{
-			get
-			{
-				return new Indexer<int, IEnumerable<int>>(x => ColumnAt(x), () => Enumerable.Range(0, this.Width));
-			}
-		}
+		public Indexer<int, IEnumerable<int>> Columns =>
+			new Indexer<int, IEnumerable<int>>(x => ColumnAt(x), () => Enumerable.Range(0, this.Width));
 
-		public Indexer<int, IEnumerable<int>> SubMatrixes
-		{
-			get
-			{
-				return new Indexer<int, IEnumerable<int>>(i => SubMatrixAt(i),
-					() => Enumerable.Range(0, C.SUB_MAT_COUNT));
-			}
-		}
+		public Indexer<int, IEnumerable<int>> SubMatrixes =>
+			new Indexer<int, IEnumerable<int>>(i => SubMatrixAt(i),
+				() => Enumerable.Range(0, SUB_MAT_COUNT));
 		#endregion
 
 		#region Event
@@ -77,12 +63,19 @@ namespace Sudoku_Solver.Board
 			{
 				for (int y = 0; y < this.Height; y++)
 				{
-					this.cells[x, y] = new Cell(this, x, y);
-					this.cells[x, y].ValueChanging += Cell_ValueChanging;
-					this.cells[x, y].ValueChanged += Cell_ValueChanged;
-					this.cells[x, y].HasValueChanged += Cell_HasValueChanged;
+					this.cells[x, y] = InitCell(x, y);
 				}
 			}
+		}
+
+		private Cell InitCell(int x, int y)
+		{
+			var cell = new Cell(this, x, y);
+			cell.ValueChanging += Cell_ValueChanging;
+			cell.ValueChanged += Cell_ValueChanged;
+			cell.HasValueChanged += Cell_HasValueChanged;
+
+			return cell;
 		}
 		#endregion
 
@@ -137,10 +130,10 @@ namespace Sudoku_Solver.Board
 			out int subIndexX,
 			out int subIndexY)
 		{
-			subMatrixX = x / C.SUB_MAT_WIDTH;
-			subMatrixY = y / C.SUB_MAT_HEIGHT;
-			subIndexX = x % C.SUB_MAT_WIDTH;
-			subIndexY = y % C.SUB_MAT_HEIGHT;
+			subMatrixX = x / SUB_MAT_WIDTH;
+			subMatrixY = y / SUB_MAT_HEIGHT;
+			subIndexX = x % SUB_MAT_WIDTH;
+			subIndexY = y % SUB_MAT_HEIGHT;
 		}
 
 		/// <summary>
@@ -160,23 +153,21 @@ namespace Sudoku_Solver.Board
 			out int x,
 			out int y)
 		{
-			x = subMatrixX * C.SUB_MAT_WIDTH + subIndexX;
-			y = subMatrixY * C.SUB_MAT_HEIGHT + subIndexY;
+			x = subMatrixX * SUB_MAT_WIDTH + subIndexX;
+			y = subMatrixY * SUB_MAT_HEIGHT + subIndexY;
 		}
 
-		public Cell GetCellAt(int x, int y)
-		{
-			return this.cells[x, y];
-		}
+		public Cell GetCellAt(int x, int y) =>
+			this.cells[x, y];
 
 		public IEnumerable<int> SubMatrixAt(int i)
 		{
-			int x = i % C.SUB_MAT_WIDTH;
-			int y = (i / C.SUB_MAT_HEIGHT) * C.SUB_MAT_HEIGHT;
+			int x = i % SUB_MAT_WIDTH;
+			int y = (i / SUB_MAT_HEIGHT) * SUB_MAT_HEIGHT;
 
-			for (int xIndex = x; xIndex < C.SUB_MAT_WIDTH; xIndex++)
+			for (int xIndex = x; xIndex < SUB_MAT_WIDTH; xIndex++)
 			{
-				for (int yIndex = y; yIndex < C.SUB_MAT_HEIGHT; yIndex++)
+				for (int yIndex = y; yIndex < SUB_MAT_HEIGHT; yIndex++)
 				{
 					if (this.cells[xIndex, yIndex].HasValue)
 					{
@@ -186,18 +177,18 @@ namespace Sudoku_Solver.Board
 			}
 		}
 
-		private void Cell_HasValueChanged(object sender, PropertyChangeEventArgs<bool> e)
+		private void Cell_HasValueChanged(object sender, PropertyChangeEventArgsBase<bool> e)
 		{
 			Task callerTask = new Task(() =>
-				this.CellHasValueChanged(this, new CellEventArgs { Cell = sender as Cell }));
+				this.CellHasValueChanged(this, new CellEventArgs(sender as Cell)));
 			callerTask.Start(this.currentScheduler);
 			callerTask.Wait();
 		}
 
-		private void Cell_ValueChanged(object sender, PropertyChangeEventArgs<int?> e)
+		private void Cell_ValueChanged(object sender, PropertyChangeEventArgsBase<int?> e)
 		{
 			Task callerTask = new Task(() =>
-				this.CellValueChanged(this, new CellEventArgs { Cell = sender as Cell }));
+				this.CellValueChanged(this, new CellEventArgs(sender as Cell)));
 			callerTask.Start(this.currentScheduler);
 			callerTask.Wait();
 		}
@@ -213,8 +204,7 @@ namespace Sudoku_Solver.Board
 					this.SubMatrixes[cell.SubMatrix].Contains(e.NewValue.Value))
 				{
 					e.Cancel = true;
-					throw new InvalidOperationException(string.Format("Cell cannot contain the value '{0}'",
-						e.NewValue));
+					throw new InvalidOperationException($"Cell cannot contain the value '{e.NewValue}'");
 				}
 			}
 		}
@@ -230,10 +220,8 @@ namespace Sudoku_Solver.Board
 			}
 		}
 
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return (this as IEnumerable<Cell>).GetEnumerator();
-		}
+		IEnumerator IEnumerable.GetEnumerator() =>
+			(this as IEnumerable<Cell>).GetEnumerator();
 
 		public bool TrySetCell(int x, int y, int? value)
 		{
@@ -296,10 +284,8 @@ namespace Sudoku_Solver.Board
 			return task;
 		}
 
-		public Task<bool> SolveAsync()
-		{
-			return SolveAsync(CancellationToken.None);
-		}
+		public Task<bool> SolveAsync() =>
+			SolveAsync(CancellationToken.None);
 
 		public bool Solve(int milliscondsTimeout)
 		{
@@ -314,10 +300,8 @@ namespace Sudoku_Solver.Board
 			return solveTask.Result;
 		}
 
-		public bool Solve()
-		{
-			return Solve(Timeout.Infinite);
-		}
+		public bool Solve() =>
+			Solve(Timeout.Infinite);
 
 		private bool SolveCell(Cell cell, CancellationToken token)
 		{
@@ -361,9 +345,9 @@ namespace Sudoku_Solver.Board
 
 			token.ThrowIfCancellationRequested();
 
-			int best = (bestCell != null) ?
-				bestCell.AvailableValues.Count() :
-				C.MAX_CELL_VALUE - C.MIN_CELL_VALUE + 1;
+			int best = (bestCell != null) 
+				? bestCell.AvailableValues.Count() 
+				: MAX_CELL_VALUE - MIN_CELL_VALUE + 1;
 
 			foreach (var cell in cells)
 			{

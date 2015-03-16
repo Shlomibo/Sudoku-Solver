@@ -7,11 +7,11 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using MatrixCell = Sudoku_Solver.Board.Cell;
-using C = Sudoku_Solver.Utils.GlobalConsts;
+using static Sudoku_Solver.Utils.GlobalConsts;
 
 namespace Sudoku_Solver.UI.VMs
 {
-	internal class BoardVM : INotifyPropertyChanged
+	internal sealed class BoardVM : INotifyPropertyChanged
 	{
 		#region Fields
 
@@ -60,6 +60,11 @@ namespace Sudoku_Solver.UI.VMs
 
 		public BoardVM(GameMatrix board)
 		{
+			if (board == null)
+			{
+				throw new NullReferenceException(nameof(board));
+			}
+
 			this.Board = board;
 		}
 		#endregion
@@ -68,9 +73,9 @@ namespace Sudoku_Solver.UI.VMs
 
 		private void LoadRows()
 		{
-			BoardRowVM[] rows = new BoardRowVM[C.BOARD_HEIGHT / C.SUB_MAT_HEIGHT];
+			var rows = new BoardRowVM[BOARD_HEIGHT / SUB_MAT_HEIGHT];
 
-			for (int rowIndex = 0; rowIndex < C.BOARD_HEIGHT / C.SUB_MAT_HEIGHT; rowIndex++)
+			for (int rowIndex = 0; rowIndex < BOARD_HEIGHT / SUB_MAT_HEIGHT; rowIndex++)
 			{
 				rows[rowIndex] = new BoardRowVM(this, rowIndex);
 			}
@@ -78,7 +83,7 @@ namespace Sudoku_Solver.UI.VMs
 			this.Rows = rows;
 		}
 
-		protected void OnPropertyChanged(
+		private void OnPropertyChanged(
 			[CallerMemberName]string propertyName = null)
 		{
 			if (propertyName != null)

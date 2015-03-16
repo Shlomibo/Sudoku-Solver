@@ -5,18 +5,13 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-using C = Sudoku_Solver.Utils.GlobalConsts;
+using static Sudoku_Solver.Utils.GlobalConsts;
 using MatrixCell = Sudoku_Solver.Board.Cell;
 
 namespace Sudoku_Solver.UI.VMs
 {
-	class CellVM : INotifyPropertyChanged
+	internal sealed class CellVM : INotifyPropertyChanged
 	{
-		#region Consts
-
-		private const string PRP_VALUE = "Value"; 
-		#endregion
-
 		#region Fields
 
 		private BoardVM board;
@@ -46,7 +41,16 @@ namespace Sudoku_Solver.UI.VMs
 
 		public CellVM(BoardVM board, int rowIndex, int subMatIndex, int subMatRowIndex, int cellIndex)
 		{
-			// TODO: Complete member initialization
+			if (board == null)
+			{
+				throw new NullReferenceException(nameof(board));
+			}
+
+			Check(rowIndex, BOARD_HEIGHT - 1, nameof(rowIndex));
+			Check(subMatIndex, SUB_MAT_COUNT - 1, nameof(subMatIndex));
+			Check(subMatRowIndex, SUB_MAT_HEIGHT - 1, nameof(subMatRowIndex));
+			Check(cellIndex, MAX_CELL_VALUE - MIN_CELL_VALUE, nameof(cellIndex));
+
 			this.board = board;
 			this.rowIndex = rowIndex;
 			this.subMatIndex = subMatIndex;
@@ -59,14 +63,22 @@ namespace Sudoku_Solver.UI.VMs
 			GetActualCoordinates(out x, out y);
 			this.Cell = this.board.Board.GetCellAt(x, y);
 			this.Cell.ValueChanged += Cell_ValueChanged;
-		} 
+		}
 		#endregion
 
 		#region Methods
 
-		public void Cell_ValueChanged(object sender, Utils.PropertyChangeEventArgs<int?> e)
+		private void Check(int number, int maxValidValue, string paramName)
 		{
-			OnPropertyChanged(PRP_VALUE);
+			if ((number < 0) || (number > maxValidValue))
+			{
+				throw new ArgumentOutOfRangeException(paramName);
+			}
+		}
+
+		public void Cell_ValueChanged(object sender, Utils.PropertyChangeEventArgsBase<int?> e)
+		{
+			OnPropertyChanged(nameof(Cell.Value));
 		}
 
 		private void GetActualCoordinates(out int x, out int y)
@@ -80,7 +92,7 @@ namespace Sudoku_Solver.UI.VMs
 			GameMatrix.FromSubMatrix(innerX, innerY, subMatX, subMatY, out x, out y);
 		}
 
-		protected virtual void OnPropertyChanged([CallerMemberName]string propertyName = null)
+		private void OnPropertyChanged([CallerMemberName]string propertyName = null)
 		{
 			if (propertyName != null)
 			{

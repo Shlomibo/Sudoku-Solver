@@ -7,19 +7,19 @@ using System.Threading.Tasks;
 
 namespace Sudoku_Solver.Utils
 {
-	public class Indexer<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
+	public abstract class IndexerBase<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 	{
 		#region Fields
 
-		protected Func<TKey, TValue> _getter;
-		protected Func<IEnumerable<TKey>> _keys;
+		protected readonly Func<TKey, TValue> getter;
+		protected readonly Func<IEnumerable<TKey>> keys;
 		#endregion
 
 		#region Properties
 
-		public TValue this[TKey key] { get { return _getter(key); } }
+		public TValue this[TKey key] => this.getter(key);
 
-		public IEnumerable<TKey> Keys { get { return _keys(); } }
+		public IEnumerable<TKey> Keys => this.keys();
 
 		public IEnumerable<TValue> Values
 		{
@@ -35,20 +35,20 @@ namespace Sudoku_Solver.Utils
 
 		#region Ctor
 
-		public Indexer(Func<TKey, TValue> getter, Func<IEnumerable<TKey>> keys)
+		internal IndexerBase(Func<TKey, TValue> getter, Func<IEnumerable<TKey>> keys)
 		{
 			if (getter == null)
 			{
-				throw new ArgumentNullException("getter");
+				throw new ArgumentNullException(nameof(getter));
 			}
 
 			if (keys == null)
 			{
-				throw new ArgumentNullException("keys");
+				throw new ArgumentNullException(nameof(keys));
 			}
 
-			_getter = getter;
-			_keys = keys;
+			this.getter = getter;
+			this.keys = keys;
 		}
 		#endregion
 
@@ -62,18 +62,25 @@ namespace Sudoku_Solver.Utils
 			}
 		}
 
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return (this as IEnumerable<KeyValuePair<TKey, TValue>>).GetEnumerator();
-		}
+		IEnumerator IEnumerable.GetEnumerator() =>
+			(this as IEnumerable<KeyValuePair<TKey, TValue>>).GetEnumerator();
 		#endregion
 	}
 
-	public class RWIndexer<TKey, TValue> : Indexer<TKey, TValue>
+	public sealed class Indexer<TKey, TValue> : IndexerBase<TKey, TValue>
+	{
+		#region Ctor
+
+		public Indexer(Func<TKey, TValue> getter, Func<IEnumerable<TKey>> keys)
+			: base(getter, keys) { }
+		#endregion
+	}
+
+	public sealed class RWIndexer<TKey, TValue> : IndexerBase<TKey, TValue>
 	{
 		#region Fields
 
-		protected Action<TKey, TValue> _setter;
+		private Action<TKey, TValue> setter;
 		#endregion
 
 		#region Properties
@@ -83,7 +90,7 @@ namespace Sudoku_Solver.Utils
 			get { return base[key]; }
 			set
 			{
-				_setter(key, value);
+				this.setter(key, value);
 			}
 		}
 		#endregion
@@ -98,10 +105,10 @@ namespace Sudoku_Solver.Utils
 		{
 			if (setter == null)
 			{
-				throw new ArgumentNullException("setter");
+				throw new ArgumentNullException(nameof(setter));
 			}
 
-			_setter = setter;
+			this.setter = setter;
 		}
 		#endregion
 	}

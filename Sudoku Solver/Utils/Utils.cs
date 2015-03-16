@@ -7,17 +7,17 @@ using System.Threading.Tasks;
 
 namespace Sudoku_Solver.Utils
 {
-	public class PropertyChangeEventArgs<T> : EventArgs
+	public abstract class PropertyChangeEventArgsBase<T> : EventArgs
 	{
 		#region Properties
 
-		public T OldValue { get; private set; }
-		public T NewValue { get; private set; }
+		public T OldValue { get; }
+		public T NewValue { get; }
 		#endregion
 
 		#region Ctor
 
-		public PropertyChangeEventArgs(
+		internal PropertyChangeEventArgsBase(
 			T oldValue,
 			T newValue)
 		{
@@ -27,11 +27,17 @@ namespace Sudoku_Solver.Utils
 		#endregion
 	}
 
-	public class CancelPropertyChangeEventArgs<T> : PropertyChangeEventArgs<T>
+	public sealed class PropertyChangeEventArgs<T> : PropertyChangeEventArgsBase<T>
+	{
+		public PropertyChangeEventArgs(T oldValue, T newValue)
+			: base(oldValue, newValue) { }
+    }
+
+	public sealed class CancelPropertyChangeEventArgs<T> : PropertyChangeEventArgsBase<T>
 	{
 		#region Properties
 
-		public bool Cancel { get; set; }
+		public bool Cancel { get; set; } = false;
 		#endregion
 
 		#region Ctor
@@ -40,14 +46,17 @@ namespace Sudoku_Solver.Utils
 			T oldValue,
 			T newValue)
 			: base(oldValue, newValue)
-		{
-			Cancel = false;
-		}
+		{ }
 		#endregion
 	}
 
 	public class CellEventArgs : EventArgs
 	{
-		public Cell Cell { get; set; }
+		public Cell Cell { get; }
+
+		public CellEventArgs(Cell cell)
+		{
+			this.Cell = cell;
+		}
 	}
 }
